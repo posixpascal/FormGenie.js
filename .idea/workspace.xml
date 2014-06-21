@@ -26,8 +26,8 @@
       <file leaf-file-name="formgenie.js" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/formgenie.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="2.462942" vertical-offset="0" max-vertical-offset="5880">
-              <caret line="144" column="5" selection-start-line="144" selection-start-column="5" selection-end-line="144" selection-end-column="5" />
+            <state vertical-scroll-proportion="0.8289624" vertical-offset="3758" max-vertical-offset="5880">
+              <caret line="299" column="0" selection-start-line="278" selection-start-column="4" selection-end-line="299" selection-end-column="0" />
               <folding>
                 <element signature="n#!!doc" expanded="true" />
               </folding>
@@ -280,8 +280,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/formgenie.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="2.462942" vertical-offset="0" max-vertical-offset="5880">
-          <caret line="144" column="5" selection-start-line="144" selection-start-column="5" selection-end-line="144" selection-end-column="5" />
+        <state vertical-scroll-proportion="0.8289624" vertical-offset="3758" max-vertical-offset="5880">
+          <caret line="299" column="0" selection-start-line="278" selection-start-column="4" selection-end-line="299" selection-end-column="0" />
           <folding>
             <element signature="n#!!doc" expanded="true" />
           </folding>
