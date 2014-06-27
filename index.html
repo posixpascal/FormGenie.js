@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <script src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="formgenie.js"></script>
+    <style>
+    label {
+        text-align: left !important;
+        margin-bottom: 10px;
+        font-size: 14px;
+    }
+    .fg-input-valid {
+        background-color: green;
+        color: #fff;
+    }
+    .fg-input-invalid {
+        color: #fff;
+        background-color: red;
+    }
+    label.fg-input-invalid {
+        color: red;
+        background: none;
+    }
+    label.fg-input-valid {
+        color: green;
+        background:none;
+    }
+    .form-group label {
+        text-align: center !important;
+        width: 100%;
+        display:block;
+        color: #999;
+    }
+    </style>
+
+
+
+</head>
+
+<body>
+
+    <div class="navbar navbar-default">
+        <div class="container">
+            <a class="navbar-brand" href="#">FormGenie</a>
+            <ul class="nav navbar-nav" style="width:90%">
+                <li class="active"><a href="#">Home</a>
+                </li>
+                <li><a href="https://github.com/posixpascal/FormGenie.js">SourceCode</a>
+                </li>
+                <li><a href="https://github.com/posixpascal/FormGenie.js/issues">Bug Reports</a>
+                </li>
+                <li class="divider-vertical"></li>
+                <li style="float:right"><a href="#">More Stuff</a>
+                </li>
+                <li style="float:right"><a href="#"><i class="glyphicon glyphicon-share"></i></a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="jumbotron text-center">
+            <h1>COOL NAME HERE</h1>
+            <p class="lead">(FormGenie ATM... not rly sure tho. Subject to change.) but basically it's just a cool form validation library</p>
+            <p>
+                <a class="btn btn-lg btn-success" href="" target="ext"><i class="glyphicon glyphicon-download"></i> Download from GitHub</a></p>
+                <small class="text-muted" style="margin-top: -10px;"><center>Nighty build. To download the latest stable version click <a href="javascript:alert('Nonono. None of that...')">here</a></center></small>
+
+        </div>
+
+        <div class="row">
+            <div class="col-lg-6">
+                <h4>Intelligent form validation</h4>
+                <p>FormGenie knows about your input fields and which validation method suits best</p>
+                
+                <h4>Customizable at finest</h4>
+                <p>Create custom validators for your own needs or even disable a few validators if you do not need them</p>
+            </div>
+
+            <div class="col-lg-6">
+                <h4>Rich addon platform</h4>
+                <p>FormGenie features the one of the simplest addon infrastructures to provide an easy layer of modification for you.</p>
+
+                <h4>Convention over Configuration</h4>
+                <p>Name your input field 'email' and FormGenie expects a valid email in these fields.</p>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="jumbotron ">
+           <form method="post" action="#/stubs/register.php" class='fg-form'>
+                
+                <div class="well">
+                <label for="email">Enter your email</label>
+                <input type="text" class="form-control" name="email" />
+                </div>
+                
+                <div class="well">
+                <label for="myNumberField">Enter our secret pin (500-0000)</label>
+                <input type="text" name="pin" class="form-control" data-regex="5(\d\d)-(\d{4})$" data-regex-flags="gi">
+                </div>
+                
+                <div class="well">
+                <label for="myNumberField"><span class="label label-info">OPTIONAL</span> What's the most important thing about fish?</label>
+                <input type="text" name="fishfield" class="form-control" data-optional=' '>
+                </div>
+
+                <div class="well">
+                <label for="password">Enter your Password</label>
+                <input type="password" class="form-control" name="password" />
+                <br/><br/>
+                
+                <label for="password">Enter your Password confirmation</label>
+                <input type="password" class="form-control" name="password_confirmation" />
+                </div>
+               <!--  
+                 <div class="well">
+                    
+                    
+                        <label>Enter a valid date so we can verify you're not dumb <span class="label label-danger">REQUIRED</span></label>
+                        <div class="form-group row">
+                               
+                                <div class="col-md-4"> <label for="date-day" class="col-md-4 control-label">Day</label>
+                                    <input type="text" class="form-control" name="day" placeholder="Be valid. Ok?">
+                                </div>
+                                
+                                <div class="col-md-4"><label for="date-month" class="col-md-4 control-label">Month</label>
+                                    <input type="text" class="form-control" name="month" placeholder="Don't try to trick FormGenie">
+                                </div>
+                              
+                                <div class="col-md-4">  <label for="date-year" class="col-md-4 control-label">Year</label>
+                                    <input type="text" class="form-control" name="year" placeholder="Because it's not possible... ;)">
+                                </div>
+                                </div>
+                        </div>
+                </div>
+ -->
+                <div class="well">
+                    
+                    <label for="terms_of_usage"><input type="checkbox" name="terms_of_usage" /> Accept our terms of usage <span class="label label-danger">REQUIRED</span></label><br/>
+                    <label for="nsa"><input type="checkbox" name="nsa" /> Send all my data to the NSA server <span class="label label-default">OPTIONAL</span></label>
+
+                </div>
+                
+
+               
+                <div class="well"><input type="submit" class="btn btn-success btn-block btn-large btn-lg" value="Validate &amp; Send"/></div>
+            </form>
+        </div>
+
+    </div>
+
+
+    <script>
+    // .magicForm automatically adds all .fg-form forms to the form validations
+    // magicForms do not need .fg-classes for formgenie control. Just drop in your fields as you wish.
+    myForm = new FormGenie('.fg-form');
+    myForm.magicForm();
+
+    </script>
+</body>
+
+</html>
