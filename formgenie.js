@@ -1,33 +1,9 @@
 /* 
  * @Author: administrator
  * @Date:   2014-06-20 14:26:14
- * @Last Modified 2014-06-27
+ * @Last Modified 2014-06-29
  */
 
-// TODO: don't pollute the global namespace with this stuff...
-var FGSettings = {
-    fields: {
-        optionalClass: "fg-optional",
-        exclude: [{
-            matcher: "submit",
-            attribute: "type"
-        }], // by default - do not validate any submit input
-        noEvents: false // disable all events from formfields
-    },
-
-    validator: {
-        runAtSubmit: true,
-        runAtFieldChange: false
-    },
-
-    form: {
-        useAjax: false, // set to true if you want FormGenie to send your form using ajax
-        // this is disabled by default for people using turbolinks/pjax and others.
-
-        showErrors: true // formGenie can show errors ontop of the form. if you don't want this
-        // you can disable it here.
-    }
-};
 // Object.keys stub
 var getKeys = function(obj) {
     var keys = [];
@@ -41,10 +17,41 @@ var getKeys = function(obj) {
 var FGGroup = function() {
     this.fields = [];
 
-    this.add = function(field) {
-        if (this.fields.indexOf(field) == -1) this.fields.push(field);
+    /**
+     * Bind a form to this group to access later
+     * @param {FormGenie} form The form you want to bind this to.
+     */
+    this.setForm = function(form) {
+        this.form = form;
     };
 
+    /**
+     * Get the bound form of this group
+     * @return {FormGenie}
+     */
+    this.getForm = function() {
+        return this.form;
+    };
+
+    /**
+     * Add a FormGenie input field to the stack
+     * @param {FGField} field Reference to the input field
+     */
+    this.add = function(field) {
+        if (this.fields.indexOf(field) == -1) this.fields.push(field);
+        else return false;
+
+        // attach references
+        field.inGroup = true;
+        field.group = this;
+        return true;
+    };
+
+    /**
+     * Get FGField from this group by name
+     * @param  {String} fieldName the name of the form
+     * @return {FGField}           the field matching fieldName
+     */
     this.get = function(fieldName) {
         for (var i = 0, len = this.fields.length; i < len; i++) {
             if (this.fields[i].getName() == fieldName) {
@@ -53,16 +60,41 @@ var FGGroup = function() {
         }
     };
 
-    this.remove = function(field) {
-        var i = this.fields.indexOf(field);
-        if (field >= 0) {
-            this.fields[i] = null;
+    /**
+     * Return all fields within this group
+     * @return {Array} Array of FGFields in this group
+     */
+    this.getAll = function() {
+        return this.fields;
+    };
+
+    // TODO: implement this
+    this.runValidator = function(validator) {};
+
+    /**
+     * Remove a field from this group
+     * @param  {String} fieldName A string representing the name of the field you want to remove
+     * @return {FGField}           the removed fgfield is returned
+     */
+    this.remove = function(fieldName) {
+        var n = [];
+        var field;
+        for (var i = 0, len = this.fields.length; i < len; i++) {
+            field = this.fields[i];
+            if (field.getName() != fieldName) {
+                n.push(field);
+            }
         }
-        this._nilFields();
+        field.inGroup = false;
+        field.group = null;
+        this.fields = n;
         return field;
     };
 
-    // strip any null values from array
+    /**
+     * [PRIVATE] remove all instances of `null` in the form group
+     * @return {Boolean} a boolean whether the element was removed or not
+     */
     this._nilFields = function() {
         var c = [];
         for (var i = 0, len = this.fields.length; i < len; i++) {
@@ -75,11 +107,19 @@ var FGGroup = function() {
     };
 };
 
-// A small wrapper for form errors
+/**
+ * Class for wrapping errors around validators and inputFields
+ * @param {Object} validator  a validator object which causes the error
+ * @param {FGField} inputField the bound inputfield in which the error happend
+ */
 var FGError = function(validator, inputField) {
     this.validator = validator;
     this.inputField = inputField;
 
+    /**
+     * Release the error and mark the input field as <error>
+     * @return {void}
+     */
     this.resolve = function() {
         this.inputField.setState(false);
         if (typeof this.validator.error !== "undefined") {
@@ -90,20 +130,34 @@ var FGError = function(validator, inputField) {
     return this;
 
 };
-// A small wrapper arround input elements
+
+/**
+ * A wrapper for input elements in a certain form. This is used to provide event bindings and other stuff
+ * @param {Node} input the HTML input element
+ * @param {FormGenie} form  The bound formgenie form
+ */
 var FGInput = function(input, form) {
     this.form = form;
     this.input = input;
+
     this.validators = []; // attached validators
 
     // Add EventHandling to input fields
     this.input.addEventListener('change', this.changeEvent, false);
     this.input.addEventListener('blur', this.blurEvent, false);
 
+    /**
+     * return the name of the input field
+     * @return {String} the input field's name
+     */
     this.getName = function() {
         return this.input.name;
     };
-
+    /**
+     * return the input fields value.
+     * - if the input field is a checkbox or a radio it'll return it's state (whether checked or not) as a boolean value
+     * @return {Object}
+     */
     this.getValue = function() {
         if (this.input.type == "checkbox" || this.input.type == "radio") {
             return (this.input.checked);
@@ -111,12 +165,25 @@ var FGInput = function(input, form) {
         return this.input.value;
     };
 
+    /**
+     * Get an attribute of the field
+     * @param  {String} n        name of the attribute
+     * @param  {Boolean} dataflag set to true if you want to access data-<attribute>
+     * @return {String}          the value of the attribute
+     */
     this.getAttribute = function(n, dataflag) {
         if (dataflag) {
             return this.getDataAttribute(n);
         }
         return this.input.getAttribute(n);
     };
+
+    /**
+     * Get the data attribute of the field
+     * @param  {String} attr     the attribute you wanna get
+     * @param  {Object} fallback optional fallback value (undefined if not specified)
+     * @return {String}          the value of the object
+     */
     this.getDataAttribute = function(attr, fallback) {
         attr = this.input.dataset[attr];
 
@@ -125,15 +192,29 @@ var FGInput = function(input, form) {
         }
         return attr;
     };
+    /**
+     * Returns true if the element is currently checked
+     * @return {Boolean} Whether the input element is checked or not
+     */
     this.isChecked = function() {
         return this.getValue();
     };
+
+    /**
+     * change the value of the current field
+     * @param {String} value a value for the field
+     */
     this.setValue = function(value) {
         this.input.value = value;
     };
 
 
-
+    /**
+     * set formgenies internal state
+     * @param {String/Boolean} state set to valid|true or invalid|false. if null is passed as an argument
+     * it'll reset the input fields state.
+     * @event 'state:changed'
+     */
     this.setState = function(state) {
         if (state == "invalid" || state === false) {
             this.input.classList.remove('fg-input-valid');
@@ -149,6 +230,10 @@ var FGInput = function(input, form) {
         this.dispatchEvent(new Event('state:changed'));
     };
 
+    /**
+     * receive the input fields state
+     * @return {Boolean} true for valid, false for invalid, null for neither
+     */
     this.getState = function() {
         var isValid = (this.input.classList.contains("fg-input-valid"));
         var isInvalid = (this.input.classList.contains("fg-input-invalid"));
@@ -159,7 +244,10 @@ var FGInput = function(input, form) {
         return null;
     };
 
-
+    /**
+     * Get a virtual className for the field used in the Validator.exclusion function
+     * @return {Integer}
+     */
     this.getFGClass = function() {
         switch (this.input.type.toLowerCase()) {
             case "checkbox":
@@ -175,11 +263,22 @@ var FGInput = function(input, form) {
         return e;
     };
 
-
+    /**
+     * this redirects any event to the input element
+     * @param  {Event} event the event you want to trigger
+     * @param  {Object} conf  optional configuration
+     * @return {void}
+     */
     this.dispatchEvent = function(event, conf) {
         this.input.dispatchEvent(event, conf);
     };
 
+    /**
+     * this redirects any listener to the input element
+     * @param {String}   listener the event you want to listen for
+     * @param {Function} cb       the callback to trigger if the event receives
+     * @param {Object}   conf     optional configuration
+     */
     this.addEventListener = function(listener, cb, conf) {
         this.input.addEventListener(listener, cb, conf);
     };
@@ -202,9 +301,32 @@ var FormGenie = function(form, customSelectorEngine) {
 
     this.validators = [];
 
+    /**
+     * Create a group from input names
+     * @param  {Array} names array containing all input fields name you want to group
+     * @return {FGGroup}       the group object
+     */
+    this.group = function(names) {
+        var inputs = this.getInputFields();
+        var group = new FGGroup();
+        group.setForm(this);
+        for (var i = 0, len = inputs.length; i < len; i++) {
+            var input = new FGInput(inputs[i], this);
+            if (names.indexOf(input.getName()) >= 0) {
+                group.add(input);
+            }
+        }
+        return group;
+    };
+
     if (this.$(this.form).length === 0)
         this.debug("No suitable form found");
 
+    /**
+     * final method which validates every input field with their respective validators
+     * @param  {Event} event the `submit` event object from the form
+     * @return {Boolean}       true/false whether the validation went successfully.
+     */
     this.validate = function(event) {
         result = this.runAllValidations();
         if (this._allTrueOrFalse(result)) {
@@ -253,12 +375,18 @@ FormGenie.not = function(matcher) {
     return matcher;
 };
 
-
+/**
+ * Return all input fields
+ * @param  {Boolean} includeSubmitField Include the submit field? Default: false
+ * @return {Array}                    Array of Nodes
+ */
 FormGenie.prototype.getInputFields = function(includeSubmitField) {
     if (typeof includeSubmitField === "undefined") {
         includeSubmitField = false;
     }
-
+    if (this.cacheInputs) {
+        return this.cacheInputs;
+    }
     var inputs = this.$("input", this.form);
     var result = [];
 
@@ -271,9 +399,10 @@ FormGenie.prototype.getInputFields = function(includeSubmitField) {
     } else {
         result = inputs;
     }
-
+    this.cacheInputs = result;
     return result;
 };
+
 FormGenie.prototype.runAllValidations = function() {
     this.errors = [];
     return this._iterate(this.validators, this.runValidator.bind(this));
@@ -307,6 +436,16 @@ FormGenie.prototype.runValidator = function(validator) {
     validator = this.validatorProxy(validator);
     var results = this._iterate(targets, validator);
     return this._allTrueOrFalse(results);
+};
+FormGenie.prototype.getInputByName = function(name) {
+    var inputs = this.getInputFields();
+    var fgfield;
+    for (var i = 0, len = inputs.length; i < len; i++) {
+        fgfield = new FGInput(inputs[i], this);
+        if (fgfield.getName() == name) {
+            return fgfield;
+        }
+    }
 };
 
 FormGenie.prototype._allTrueOrFalse = function(array) {
@@ -633,6 +772,7 @@ FormGenie.prototype._iterate = function(array, iterator, include_undefined) {
 window.FormGenie = FormGenie;
 
 /* this is an example of plugin injection. */
+// a classWrapper
 var MyLabelPlugin = function(label, fg) {
     this.fg = fg;
     this.label = label;
@@ -658,6 +798,9 @@ var MyLabelPlugin = function(label, fg) {
 
     return this;
 };
+
+
+// Get label associated with this field
 FormGenie.addons.FilterLabel = function(fg_field) {
     fg_field.getLabel = function() {
         var name = this.getName();
@@ -679,7 +822,7 @@ FormGenie.addons.FilterLabel = function(fg_field) {
  * Add .getCompanion method which gets related input fields (password, password_confirmation)
  * @param fg_field FormGenie Input Class
  * @param fg_form FormGenie Form Class
- * @returns {*[]} Array containing modified input & form classes2
+ * @returns {Array} Array containing modified input & form classes2
  */
 FormGenie.addons.CompanionAddon = function(fg_field) {
     fg_field.getCompanion = function() {
